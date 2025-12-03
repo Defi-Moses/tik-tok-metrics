@@ -153,11 +153,6 @@ async function fetchAndSaveAccountStats(accountId: string, tiktokUserId: string)
   // Get today's date (normalized to midnight UTC)
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
-
-  // Upsert snapshot for today
-  // Check if a snapshot exists for today first, then update or insert
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 

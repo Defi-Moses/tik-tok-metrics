@@ -181,7 +181,7 @@ export default async function UserPage({ params }: UserPageProps) {
           </div>
         </div>
 
-      {!latestSnapshot ? (
+        {!latestSnapshot ? (
         <div className="bg-yellow-50/80 dark:bg-yellow-950/40 backdrop-blur-sm border border-yellow-200 dark:border-yellow-900/50 rounded-xl p-6 sm:p-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 dark:bg-yellow-950/30 mb-4">
             <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -326,6 +326,7 @@ export default async function UserPage({ params }: UserPageProps) {
           </section>
         </>
       )}
+      </div>
     </div>
   );
 }
