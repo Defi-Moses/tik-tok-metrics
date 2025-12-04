@@ -6,36 +6,44 @@ import { query } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+/**
+ * Shared handler for OAuth callback processing
+ * Handles both GET (standard OAuth redirect) and POST (some OAuth implementations)
+ */
+async function handleOAuthCallback(searchParams: URLSearchParams, requestUrl: string) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const cookieStore = await cookies();
 
   try {
-    // Extract query parameters
-    const searchParams = request.nextUrl.searchParams;
-    const code = searchParams.get('code');
-    const state = searchParams.get('state');
-    const error = searchParams.get('error');
+    // Extract query parameters per TikTok documentation
+    // Documentation: https://developers.tiktok.com/doc/login-kit-web
+    const code = searchParams.get('code'); // Authorization code
+    const scopes = searchParams.get('scopes'); // Comma-separated scopes granted (note: plural in callback)
+    const state = searchParams.get('state'); // CSRF state token
+    const error = searchParams.get('error'); // Error code if authorization failed
+    const errorDescription = searchParams.get('error_description'); // Human-readable error description
 
     // Log all query parameters for debugging
     const allParams = Object.fromEntries(searchParams.entries());
     console.log('OAuth callback received:', {
-      url: request.nextUrl.toString(),
+      url: requestUrl,
       params: allParams,
       hasCode: !!code,
+      hasScopes: !!scopes,
+      scopes: scopes,
       hasError: !!error,
       hasState: !!state,
     });
 
-    // Handle OAuth errors from TikTok
+    // Handle OAuth errors from TikTok per documentation
     if (error) {
-      const errorDescription = searchParams.get('error_description') || error;
+      const errorDesc = errorDescription || error;
       const errorCode = searchParams.get('error_code');
       const logId = searchParams.get('log_id');
       
       console.error('TikTok OAuth error:', {
         error,
-        error_description: errorDescription,
+        error_description: errorDesc,
         error_code: errorCode,
         log_id: logId,
         all_params: allParams,
@@ -43,9 +51,9 @@ export async function GET(request: NextRequest) {
       
       // Map specific TikTok errors to user-friendly messages
       let errorParam = 'oauth_denied';
-      if (error === 'invalid_client_key' || errorDescription?.includes('client_key')) {
+      if (error === 'invalid_client_key' || errorDesc?.includes('client_key')) {
         errorParam = 'invalid_client_key';
-      } else if (error === 'invalid_redirect_uri' || errorDescription?.includes('redirect_uri')) {
+      } else if (error === 'invalid_redirect_uri' || errorDesc?.includes('redirect_uri')) {
         errorParam = 'invalid_redirect_uri';
       }
       
@@ -64,20 +72,15 @@ export async function GET(request: NextRequest) {
       const storedCodeVerifier = cookieStore.get('tiktok_oauth_code_verifier')?.value;
       
       console.error('No authorization code received. Full callback details:', {
-        url: request.nextUrl.toString(),
-        full_url: request.url,
+        url: requestUrl,
         all_params: allParams,
-        search_params_string: request.nextUrl.search,
+        search_params_string: searchParams.toString(),
         has_any_params: hasAnyParams,
         expected_redirect_uri: `${appUrl}/api/auth/callback`,
         received_state: state,
         stored_state: storedState,
         state_matches: state === storedState,
         has_stored_code_verifier: !!storedCodeVerifier,
-        request_headers: {
-          referer: request.headers.get('referer'),
-          user_agent: request.headers.get('user-agent')?.substring(0, 100),
-        },
       });
       
       // If no parameters at all, likely redirect URI mismatch
@@ -285,5 +288,37 @@ export async function GET(request: NextRequest) {
       new URL('/connect?error=unexpected_error', appUrl)
     );
   }
+}
+
+export async function GET(request: NextRequest) {
+  return handleOAuthCallback(request.nextUrl.searchParams, request.nextUrl.toString());
+}
+
+export async function POST(request: NextRequest) {
+  // Handle POST requests (some OAuth implementations use POST for callback)
+  // Extract parameters from either query string or form data
+  const contentType = request.headers.get('content-type') || '';
+  
+  let searchParams: URLSearchParams;
+  
+  if (contentType.includes('application/x-www-form-urlencoded')) {
+    // Parse form data
+    const formData = await request.formData();
+    searchParams = new URLSearchParams();
+    for (const [key, value] of formData.entries()) {
+      searchParams.set(key, value.toString());
+    }
+    // Also merge query params if any
+    request.nextUrl.searchParams.forEach((value, key) => {
+      if (!searchParams.has(key)) {
+        searchParams.set(key, value);
+      }
+    });
+  } else {
+    // Use query params (fallback)
+    searchParams = request.nextUrl.searchParams;
+  }
+  
+  return handleOAuthCallback(searchParams, request.nextUrl.toString());
 }
 

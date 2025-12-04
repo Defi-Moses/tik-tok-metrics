@@ -5,6 +5,18 @@ import crypto from 'crypto';
 export const dynamic = 'force-dynamic';
 
 /**
+ * TikTok OAuth Authorization Endpoint
+ * 
+ * Following official TikTok Login Kit for Web documentation:
+ * https://developers.tiktok.com/doc/login-kit-web
+ * 
+ * This endpoint initiates the OAuth 2.0 authorization flow by:
+ * 1. Generating a CSRF state token
+ * 2. Generating PKCE code verifier and challenge (security enhancement)
+ * 3. Redirecting user to TikTok's authorization page
+ */
+
+/**
  * Generate a cryptographically random code verifier for PKCE
  * Must be 43-128 characters long, using unreserved characters
  */
@@ -36,9 +48,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate CSRF state token
+    // Following TikTok docs: "a randomly generated alphanumeric string constructed using a random-number generator"
+    // Using crypto.randomBytes for better security than Math.random()
     const state = crypto.randomBytes(32).toString('hex');
 
-    // Generate PKCE code verifier and challenge
+    // Generate PKCE code verifier and challenge (security best practice)
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = generateCodeChallenge(codeVerifier);
 
@@ -60,19 +74,28 @@ export async function GET(request: NextRequest) {
       path: '/',
     });
 
-    // Build TikTok authorization URL with PKCE
+    // Build TikTok authorization URL following official documentation
+    // URL: https://www.tiktok.com/v2/auth/authorize/
+    // Parameters must be in application/x-www-form-urlencoded format
     const redirectUri = `${appUrl}/api/auth/callback`;
     const scope = 'user.info.basic,video.list';
     const responseType = 'code';
 
     const authUrl = new URL('https://www.tiktok.com/v2/auth/authorize/');
+    
+    // Required parameters per documentation
     authUrl.searchParams.set('client_key', clientKey);
     authUrl.searchParams.set('redirect_uri', redirectUri);
     authUrl.searchParams.set('scope', scope);
     authUrl.searchParams.set('response_type', responseType);
     authUrl.searchParams.set('state', state);
+    
+    // PKCE parameters (security enhancement)
     authUrl.searchParams.set('code_challenge', codeChallenge);
     authUrl.searchParams.set('code_challenge_method', 'S256');
+    
+    // Optional parameter: disable_auto_auth (0 = skip auth page for valid sessions, 1 = always show)
+    // Not setting this to use default behavior
 
     // Log authorization URL for debugging (without sensitive data)
     console.log('Redirecting to TikTok OAuth:', {

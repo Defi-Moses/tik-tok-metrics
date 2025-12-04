@@ -92,8 +92,10 @@ export function getAuthorizationUrl(): string {
 
 /**
  * Exchanges authorization code for access and refresh tokens
+ * Following TikTok Login Kit for Web documentation: https://developers.tiktok.com/doc/login-kit-web
+ * 
  * @param code - Authorization code from TikTok OAuth callback
- * @param codeVerifier - Code verifier from PKCE flow (required for PKCE)
+ * @param codeVerifier - Code verifier from PKCE flow (required when using PKCE)
  * @returns Token response with access_token, refresh_token, expires_in, and open_id
  */
 export async function exchangeCodeForTokens(
@@ -119,13 +121,19 @@ export async function exchangeCodeForTokens(
   
   const redirectUri = `${APP_URL}/api/auth/callback`;
   
+  // Build token exchange request per TikTok documentation
+  // Endpoint: https://open.tiktokapis.com/v2/oauth/token/
+  // Method: POST
+  // Content-Type: application/x-www-form-urlencoded
+  // Required parameters: client_key, client_secret, code, grant_type, redirect_uri
+  // PKCE parameter: code_verifier (when using PKCE)
   const params = new URLSearchParams({
     client_key: CLIENT_KEY,
     client_secret: CLIENT_SECRET,
     code: code.trim(),
     grant_type: 'authorization_code',
     redirect_uri: redirectUri,
-    code_verifier: codeVerifier.trim(),
+    code_verifier: codeVerifier.trim(), // PKCE parameter
   });
 
   // Log request details (without sensitive data)
@@ -139,12 +147,15 @@ export async function exchangeCodeForTokens(
     grant_type: 'authorization_code',
   });
 
+  // Convert URLSearchParams to string for the body
+  const bodyString = params.toString();
+  
   const response = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: params,
+    body: bodyString,
   });
 
   // Get response text first to handle both JSON and non-JSON responses
@@ -245,17 +256,19 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRes
     grant_type: 'refresh_token',
   });
 
+  const refreshParams = new URLSearchParams({
+    client_key: CLIENT_KEY,
+    client_secret: CLIENT_SECRET,
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken.trim(),
+  });
+  
   const response = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: new URLSearchParams({
-      client_key: CLIENT_KEY,
-      client_secret: CLIENT_SECRET,
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken.trim(),
-    }),
+    body: refreshParams.toString(),
   });
 
   // Get response text first to handle both JSON and non-JSON responses

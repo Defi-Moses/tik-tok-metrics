@@ -130,30 +130,38 @@ function StatsCard({ stats }: { stats: { currentCount: number; growth: number; g
   return (
     <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-700 flex justify-center">
       <div className="w-1/5 min-w-[280px] p-6 sm:p-8 rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-gray-200/50 dark:border-gray-800/50 shadow-lg">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex-1">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              Total Waitlist Users
-            </h2>
+        <div className="flex flex-col">
+          {/* Title at the top */}
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6 text-center">
+            Total Waitlist Users
+          </h2>
+          
+          {/* Number in the middle with weekly gains to the right */}
+          <div className="flex items-center justify-center gap-4 mb-4">
             <p className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">
               {formatNumber(stats.currentCount)}
             </p>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              Growth since last week
-            </p>
-            <div className="flex items-center gap-3">
-              <span className={`text-lg sm:text-xl font-semibold ${
-                stats.growth >= 0
-                  ? 'text-green-600 dark:text-green-400'
-                  : 'text-red-600 dark:text-red-400'
-              }`}>
-                {stats.growth >= 0 ? '+' : ''}{formatNumber(stats.growth)}
-              </span>
-              <ChangeIndicator changePercent={stats.growthPercent} />
+            <div className="flex flex-col items-start gap-1">
+              <div className="flex items-center gap-2">
+                <span className={`text-sm font-semibold ${
+                  stats.growth >= 0
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-red-600 dark:text-red-400'
+                }`}>
+                  {stats.growth >= 0 ? '+' : ''}{formatNumber(stats.growth)}
+                </span>
+                <ChangeIndicator changePercent={stats.growthPercent} />
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Weekly gains
+              </p>
             </div>
           </div>
+          
+          {/* Description text at the bottom */}
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 text-center mt-auto">
+            Total number of users who have joined the waitlist
+          </p>
         </div>
       </div>
     </div>
