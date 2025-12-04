@@ -191,7 +191,7 @@ export default async function ConnectPage({ searchParams }: ConnectPageProps) {
 
 
         <div className="mb-8 animate-fade-in" style={{ animationDelay: '200ms' }}>
-          <Link
+          <a
             href="/api/auth/tiktok"
             className="group inline-flex items-center gap-3 px-6 py-4 sm:px-8 rounded-xl bg-gradient-to-r from-pink-600 via-red-500 to-orange-500 text-white font-semibold text-base sm:text-lg shadow-lg shadow-pink-500/30 hover:shadow-xl hover:shadow-pink-500/40 transition-all duration-300 transform hover:scale-105 active:scale-95 relative overflow-hidden touch-manipulation min-h-[44px] w-full sm:w-auto justify-center focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
           >
@@ -205,7 +205,7 @@ export default async function ConnectPage({ searchParams }: ConnectPageProps) {
               <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-.88-.05 6.33 6.33 0 0 0 0 12.66 6.33 6.33 0 0 0 6.33-6.33V7.4a4.85 4.85 0 0 0 4.13-4.71z" />
             </svg>
             <span className="relative z-10">Connect TikTok Account</span>
-          </Link>
+          </a>
         </div>
 
         <div className="space-y-4 animate-fade-in" style={{ animationDelay: '300ms' }}>
