@@ -59,21 +59,37 @@ export async function GET(request: NextRequest) {
       // Check if we have any parameters at all - if not, might be redirect URI mismatch
       const hasAnyParams = searchParams.toString().length > 0;
       
+      // Check for stored state and code verifier to help diagnose
+      const storedState = cookieStore.get('tiktok_oauth_state')?.value;
+      const storedCodeVerifier = cookieStore.get('tiktok_oauth_code_verifier')?.value;
+      
       console.error('No authorization code received. Full callback details:', {
         url: request.nextUrl.toString(),
+        full_url: request.url,
         all_params: allParams,
         search_params_string: request.nextUrl.search,
         has_any_params: hasAnyParams,
         expected_redirect_uri: `${appUrl}/api/auth/callback`,
+        received_state: state,
+        stored_state: storedState,
+        state_matches: state === storedState,
+        has_stored_code_verifier: !!storedCodeVerifier,
+        request_headers: {
+          referer: request.headers.get('referer'),
+          user_agent: request.headers.get('user-agent')?.substring(0, 100),
+        },
       });
       
       // If no parameters at all, likely redirect URI mismatch
       if (!hasAnyParams) {
+        console.error('No query parameters received - likely redirect URI mismatch');
         return NextResponse.redirect(
           new URL('/connect?error=invalid_redirect_uri', appUrl)
         );
       }
       
+      // If we have an error parameter, it was already handled above
+      // Otherwise, no code means authorization was cancelled or failed silently
       return NextResponse.redirect(
         new URL('/connect?error=no_code', appUrl)
       );
@@ -106,13 +122,38 @@ export async function GET(request: NextRequest) {
     // Exchange code for tokens
     let tokenResponse;
     try {
+      console.log('Attempting token exchange:', {
+        code_length: code.length,
+        code_preview: code.substring(0, 20) + '...',
+        has_code_verifier: !!codeVerifier,
+        code_verifier_length: codeVerifier?.length,
+      });
       tokenResponse = await exchangeCodeForTokens(code, codeVerifier);
+      console.log('Token exchange successful:', {
+        has_access_token: !!tokenResponse.access_token,
+        has_refresh_token: !!tokenResponse.refresh_token,
+        open_id: tokenResponse.open_id,
+      });
     } catch (error) {
-      console.error('Token exchange failure:', error);
+      console.error('Token exchange failure:', {
+        error: error instanceof Error ? error.message : String(error),
+        error_name: error instanceof Error ? error.name : typeof error,
+        error_stack: error instanceof Error ? error.stack : undefined,
+        code_length: code?.length,
+        has_code_verifier: !!codeVerifier,
+      });
       if (error instanceof RateLimitError) {
         return NextResponse.redirect(
           new URL('/connect?error=rate_limit', appUrl)
         );
+      }
+      // Log the full error for debugging
+      if (error instanceof Error) {
+        console.error('Full error details:', {
+          message: error.message,
+          name: error.name,
+          stack: error.stack,
+        });
       }
       return NextResponse.redirect(
         new URL('/connect?error=token_exchange_failed', appUrl)

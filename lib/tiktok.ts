@@ -100,15 +100,43 @@ export async function exchangeCodeForTokens(
   code: string,
   codeVerifier: string
 ): Promise<TokenResponse> {
+  // Validate inputs
+  if (!code || code.trim().length === 0) {
+    throw new TikTokAPIError('Authorization code is required', 400, 'MISSING_CODE');
+  }
+  
+  if (!codeVerifier || codeVerifier.trim().length === 0) {
+    throw new TikTokAPIError('Code verifier is required for PKCE', 400, 'MISSING_CODE_VERIFIER');
+  }
+  
+  if (!CLIENT_KEY || !CLIENT_SECRET) {
+    throw new TikTokAPIError('TikTok client credentials are not configured', 500, 'MISSING_CREDENTIALS');
+  }
+  
+  if (!APP_URL) {
+    throw new TikTokAPIError('App URL is not configured', 500, 'MISSING_APP_URL');
+  }
+  
   const redirectUri = `${APP_URL}/api/auth/callback`;
   
   const params = new URLSearchParams({
-    client_key: CLIENT_KEY!,
-    client_secret: CLIENT_SECRET!,
-    code: code,
+    client_key: CLIENT_KEY,
+    client_secret: CLIENT_SECRET,
+    code: code.trim(),
     grant_type: 'authorization_code',
     redirect_uri: redirectUri,
-    code_verifier: codeVerifier,
+    code_verifier: codeVerifier.trim(),
+  });
+
+  // Log request details (without sensitive data)
+  console.log('Token exchange request:', {
+    redirect_uri: redirectUri,
+    client_key: CLIENT_KEY?.substring(0, 4) + '...',
+    has_code: !!code,
+    code_length: code?.length,
+    has_code_verifier: !!codeVerifier,
+    code_verifier_length: codeVerifier?.length,
+    grant_type: 'authorization_code',
   });
 
   const response = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
@@ -119,25 +147,79 @@ export async function exchangeCodeForTokens(
     body: params,
   });
 
+  // Get response text first to handle both JSON and non-JSON responses
+  const responseText = await response.text();
+  let errorData: any;
+  
+  try {
+    errorData = JSON.parse(responseText);
+  } catch (e) {
+    errorData = { error: 'Invalid JSON response', raw_response: responseText.substring(0, 500) };
+  }
+
   if (!response.ok) {
+    console.error('Token exchange failed:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+      error_data: errorData,
+      full_response: responseText.substring(0, 1000),
+    });
+
     if (response.status === 429) {
       const retryAfter = response.headers.get('Retry-After');
       throw new RateLimitError(retryAfter ? parseInt(retryAfter) : undefined);
     }
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    
+    // Extract error details from TikTok API response
+    const errorMessage = errorData?.error?.message || 
+                        errorData?.error_description || 
+                        errorData?.error || 
+                        errorData?.message ||
+                        `HTTP ${response.status}: ${response.statusText}`;
+    
     throw new TikTokAPIError(
-      `Failed to exchange code for tokens: ${JSON.stringify(error)}`,
+      `Failed to exchange code for tokens: ${errorMessage}. Full response: ${JSON.stringify(errorData)}`,
+      response.status,
+      errorData?.error?.code || errorData?.error_code
+    );
+  }
+
+  let data: any;
+  try {
+    data = JSON.parse(responseText);
+  } catch (e) {
+    console.error('Failed to parse token response JSON:', {
+      response_text: responseText.substring(0, 500),
+      error: e,
+    });
+    throw new TikTokAPIError(
+      `Invalid JSON response from token endpoint: ${responseText.substring(0, 200)}`,
       response.status
     );
   }
 
-  const data = await response.json();
+  // Handle TikTok API response structure
+  // Response can be: { data: { access_token, ... } } or { access_token, ... }
+  const tokenData = data.data || data;
+  
+  if (!tokenData || !tokenData.access_token) {
+    console.error('Unexpected token response structure:', {
+      full_response: data,
+      has_data: !!data.data,
+      has_access_token: !!tokenData?.access_token,
+    });
+    throw new TikTokAPIError(
+      `Unexpected token response structure: ${JSON.stringify(data)}`,
+      response.status
+    );
+  }
   
   return {
-    access_token: data.data.access_token,
-    refresh_token: data.data.refresh_token,
-    expires_in: data.data.expires_in,
-    open_id: data.data.open_id,
+    access_token: tokenData.access_token,
+    refresh_token: tokenData.refresh_token,
+    expires_in: tokenData.expires_in,
+    open_id: tokenData.open_id,
   };
 }
 
