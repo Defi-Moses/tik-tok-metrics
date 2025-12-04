@@ -4,6 +4,8 @@ import DisconnectButton from './disconnect-button';
 import { ToastClient } from './toast-client';
 import { ThemeToggle } from '@/app/components/theme-toggle';
 
+export const dynamic = 'force-dynamic';
+
 interface TikTokAccount {
   id: string;
   tiktokUserId: string;

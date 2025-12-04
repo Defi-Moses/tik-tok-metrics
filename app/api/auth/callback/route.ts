@@ -4,6 +4,8 @@ import { exchangeCodeForTokens, fetchUserInfo, RateLimitError, TokenExpiredError
 import { encrypt } from '@/lib/encryption';
 import { query } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const cookieStore = await cookies();

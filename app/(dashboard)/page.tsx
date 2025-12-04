@@ -2,6 +2,9 @@ import Link from 'next/link';
 import { query } from '@/lib/db';
 import { ThemeToggle } from '@/app/components/theme-toggle';
 
+export const dynamic = 'force-dynamic';
+import { getRowCountStats } from '@/lib/secondary-db';
+
 interface AccountWithMetrics {
   id: string;
   tiktokUserId: string;
@@ -63,6 +66,15 @@ function calculateChange(
   };
 }
 
+function getInitials(username: string): string {
+  return username
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
+
 function ChangeIndicator({ changePercent }: { changePercent: number }) {
   if (changePercent === 0) {
     return (
@@ -114,6 +126,40 @@ function ChangeIndicator({ changePercent }: { changePercent: number }) {
   );
 }
 
+function StatsCard({ stats }: { stats: { currentCount: number; growth: number; growthPercent: number } }) {
+  return (
+    <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
+      <div className="p-6 sm:p-8 rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-gray-200/50 dark:border-gray-800/50 shadow-lg">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex-1">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              Total Waitlist Users
+            </h2>
+            <p className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">
+              {formatNumber(stats.currentCount)}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              Growth since last week
+            </p>
+            <div className="flex items-center gap-3">
+              <span className={`text-lg sm:text-xl font-semibold ${
+                stats.growth >= 0
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-red-600 dark:text-red-400'
+              }`}>
+                {stats.growth >= 0 ? '+' : ''}{formatNumber(stats.growth)}
+              </span>
+              <ChangeIndicator changePercent={stats.growthPercent} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AccountCard({ account }: { account: AccountWithMetrics }) {
   const latest = account.latestSnapshot;
   const weekAgo = account.weekAgoSnapshot;
@@ -152,15 +198,6 @@ function AccountCard({ account }: { account: AccountWithMetrics }) {
     latest.videos,
     weekAgo?.videos || null
   );
-
-  const getInitials = (username: string) => {
-    return username
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   return (
     <Link
@@ -294,6 +331,16 @@ async function getAccountsWithMetrics(): Promise<AccountWithMetrics[]> {
 export default async function DashboardPage() {
   const accounts = await getAccountsWithMetrics();
 
+  // Get stats from secondary database
+  let stats = null;
+  try {
+    const tableName = process.env.SECONDARY_DB_TABLE_NAME || 'users';
+    stats = await getRowCountStats(tableName);
+  } catch (error) {
+    console.error('Error fetching secondary database stats:', error);
+    // Continue without stats if there's an error
+  }
+
   // Get the most recent snapshot timestamp across all accounts
   const latestTimestamp = accounts.reduce<Date | null>((latest, account) => {
     if (!account.latestSnapshot) return latest;
@@ -353,6 +400,9 @@ export default async function DashboardPage() {
             <ThemeToggle />
           </div>
         </div>
+
+        {/* Stats Card */}
+        {stats && <StatsCard stats={stats} />}
 
         {/* Accounts Grid */}
         {accounts.length === 0 ? (

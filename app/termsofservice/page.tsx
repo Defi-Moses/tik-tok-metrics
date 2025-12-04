@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { ThemeToggle } from '@/app/components/theme-toggle';
 import type { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Terms of Service | TikTok Metrics',
   description: 'Terms of Service for TikTok Metrics application',
@@ -54,7 +56,7 @@ export default function TermsOfServicePage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Agreement to Terms</h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                By accessing or using our TikTok metrics application ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these Terms, you may not access the Service.
+                By accessing or using our TikTok metrics application (&quot;Service&quot;), you agree to be bound by these Terms of Service (&quot;Terms&quot;). If you disagree with any part of these Terms, you may not access the Service.
               </p>
             </section>
 
@@ -153,7 +155,7 @@ export default function TermsOfServicePage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Disclaimers</h2>
               <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed font-semibold">
-                THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+                THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
               </p>
               <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
                 We do not warrant that:

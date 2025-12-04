@@ -3,6 +3,8 @@ import { getAllTikTokAccounts, getDecryptedTokens, refreshTokenForAccount } from
 import { fetchUserInfo, fetchUserVideos, TokenExpiredError, RateLimitError } from '@/lib/tiktok';
 import { query } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Cron job endpoint to fetch stats for all connected TikTok accounts
  * Should be called daily via Vercel Cron

@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { ThemeToggle } from '@/app/components/theme-toggle';
 import type { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Privacy Policy | TikTok Metrics',
   description: 'Privacy Policy for TikTok Metrics application',
@@ -54,7 +56,7 @@ export default function PrivacyPolicyPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Introduction</h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                This Privacy Policy describes how we collect, use, and protect your information when you use our TikTok metrics application ("Service"). By using our Service, you agree to the collection and use of information in accordance with this policy.
+                This Privacy Policy describes how we collect, use, and protect your information when you use our TikTok metrics application (&quot;Service&quot;). By using our Service, you agree to the collection and use of information in accordance with this policy.
               </p>
             </section>
 
@@ -130,7 +132,7 @@ export default function PrivacyPolicyPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Third-Party Services</h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                Our Service integrates with TikTok's API and may use other third-party services. These services have their own privacy policies governing the collection and use of your information. We encourage you to review their privacy policies.
+                Our Service integrates with TikTok&apos;s API and may use other third-party services. These services have their own privacy policies governing the collection and use of your information. We encourage you to review their privacy policies.
               </p>
             </section>
 
@@ -183,7 +185,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Children's Privacy</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Children&apos;s Privacy</h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                 Our Service is not intended for users under the age of 13. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, please contact us.
               </p>
@@ -199,7 +201,7 @@ export default function PrivacyPolicyPage() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Changes to This Privacy Policy</h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.
+                We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the &quot;Last Updated&quot; date.
               </p>
             </section>
 

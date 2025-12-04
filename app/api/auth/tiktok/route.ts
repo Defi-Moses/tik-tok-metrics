@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Generate a cryptographically random code verifier for PKCE
  * Must be 43-128 characters long, using unreserved characters

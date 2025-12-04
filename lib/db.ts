@@ -126,7 +126,7 @@ export async function updateUser(id: string, input: UpdateUserInput): Promise<Us
     `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
     values
   );
-  return result.rows[0] as User | null;
+  return (result.rows[0] as unknown as User) || null;
 }
 
 /**
@@ -148,7 +148,7 @@ export async function getAllUsers(): Promise<User[]> {
     SELECT * FROM users
     ORDER BY created_at DESC
   `;
-  return result as User[];
+  return result as unknown as User[];
 }
 
 // ==================== DAILY SNAPSHOT QUERIES ====================
@@ -181,14 +181,14 @@ export async function getDailySnapshotsByUserId(
       LIMIT ${limit}
       OFFSET ${offset}
     `;
-    return result as DailySnapshot[];
+    return result as unknown as DailySnapshot[];
   } else {
     const result = await sql`
       SELECT * FROM daily_snapshots
       WHERE user_id = ${userId}
       ORDER BY snapshot_date DESC
     `;
-    return result as DailySnapshot[];
+    return result as unknown as DailySnapshot[];
   }
 }
 
@@ -284,7 +284,7 @@ export async function updateDailySnapshot(
     `UPDATE daily_snapshots SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
     values
   );
-  return result.rows[0] as DailySnapshot | null;
+  return (result.rows[0] as unknown as DailySnapshot) || null;
 }
 
 /**
@@ -352,7 +352,7 @@ export async function getDailySnapshotsByDateRange(
       AND snapshot_date <= ${endDate}
     ORDER BY snapshot_date ASC
   `;
-  return result as DailySnapshot[];
+  return result as unknown as DailySnapshot[];
 }
 
 // Export sql for raw queries if needed

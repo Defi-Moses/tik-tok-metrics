@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { ChartComponent } from './chart-component';
 import { ThemeToggle } from '@/app/components/theme-toggle';
 
+export const dynamic = 'force-dynamic';
+
 interface UserPageProps {
   params: {
     id: string;
@@ -206,7 +208,7 @@ export default async function UserPage({ params }: UserPageProps) {
             No videos found
           </p>
           <p className="text-blue-700 dark:text-blue-400 text-sm">
-            This account doesn't have any videos yet. Video metrics will appear once videos are published.
+            This account doesn&apos;t have any videos yet. Video metrics will appear once videos are published.
           </p>
         </div>
       ) : (
