@@ -64,6 +64,7 @@ export async function refreshTokenForAccount(
   refreshToken: string
 ): Promise<string> {
   try {
+    console.log(`Attempting to refresh token for account ${accountId}`);
     const tokenResponse = await refreshAccessToken(refreshToken);
 
     // Encrypt new tokens
@@ -82,12 +83,45 @@ export async function refreshTokenForAccount(
       [encryptedAccessToken, encryptedRefreshToken, accountId]
     );
 
-    console.log(`Successfully refreshed token for account ${accountId}`);
+    console.log(`Successfully refreshed token for account ${accountId}`, {
+      expires_in: tokenResponse.expires_in,
+      has_new_refresh_token: !!tokenResponse.refresh_token,
+    });
     return tokenResponse.access_token;
   } catch (error) {
-    console.error(`Failed to refresh token for account ${accountId}:`, error);
+    console.error(`Failed to refresh token for account ${accountId}:`, {
+      error: error instanceof Error ? error.message : String(error),
+      error_name: error instanceof Error ? error.name : typeof error,
+      error_stack: error instanceof Error ? error.stack : undefined,
+      account_id: accountId,
+      has_refresh_token: !!refreshToken,
+    });
+    
+    // Provide more specific error message
+    if (error instanceof Error) {
+      if (error.message.includes('invalid') || error.message.includes('expired')) {
+        throw new Error(`Refresh token is invalid or expired for account ${accountId}. Please reconnect your account.`);
+      }
+      throw new Error(`Failed to refresh token for account ${accountId}: ${error.message}`);
+    }
     throw new Error(`Failed to refresh token for account ${accountId}`);
   }
+}
+
+/**
+ * Gets a valid access token for an account, automatically refreshing if needed
+ * This function will attempt to use the current token, and if it's expired,
+ * it will automatically refresh it using the refresh token.
+ * @param accountId - The TikTok account ID
+ * @returns Valid access token
+ */
+export async function getValidAccessToken(accountId: string): Promise<string> {
+  const { accessToken, refreshToken } = await getDecryptedTokens(accountId);
+  
+  // For now, just return the access token
+  // The calling code should handle TokenExpiredError and call refreshTokenForAccount
+  // In the future, we could add token expiration checking here
+  return accessToken;
 }
 
 

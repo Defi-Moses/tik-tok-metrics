@@ -229,38 +229,115 @@ export async function exchangeCodeForTokens(
  * @returns New token response with updated access_token, refresh_token, expires_in, and open_id
  */
 export async function refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
+  // Validate inputs
+  if (!refreshToken || refreshToken.trim().length === 0) {
+    throw new TikTokAPIError('Refresh token is required', 400, 'MISSING_REFRESH_TOKEN');
+  }
+  
+  if (!CLIENT_KEY || !CLIENT_SECRET) {
+    throw new TikTokAPIError('TikTok client credentials are not configured', 500, 'MISSING_CREDENTIALS');
+  }
+
+  console.log('Refreshing access token:', {
+    client_key: CLIENT_KEY.substring(0, 4) + '...',
+    has_refresh_token: !!refreshToken,
+    refresh_token_length: refreshToken.length,
+    grant_type: 'refresh_token',
+  });
+
   const response = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: new URLSearchParams({
-      client_key: CLIENT_KEY!,
-      client_secret: CLIENT_SECRET!,
+      client_key: CLIENT_KEY,
+      client_secret: CLIENT_SECRET,
       grant_type: 'refresh_token',
-      refresh_token: refreshToken,
+      refresh_token: refreshToken.trim(),
     }),
   });
 
+  // Get response text first to handle both JSON and non-JSON responses
+  const responseText = await response.text();
+  let errorData: any;
+  
+  try {
+    errorData = JSON.parse(responseText);
+  } catch (e) {
+    errorData = { error: 'Invalid JSON response', raw_response: responseText.substring(0, 500) };
+  }
+
   if (!response.ok) {
+    console.error('Token refresh failed:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+      error_data: errorData,
+      full_response: responseText.substring(0, 1000),
+    });
+
     if (response.status === 429) {
       const retryAfter = response.headers.get('Retry-After');
       throw new RateLimitError(retryAfter ? parseInt(retryAfter) : undefined);
     }
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    
+    // Extract error details from TikTok API response
+    const errorMessage = errorData?.error?.message || 
+                        errorData?.error_description || 
+                        errorData?.error || 
+                        errorData?.message ||
+                        `HTTP ${response.status}: ${response.statusText}`;
+    
     throw new TikTokAPIError(
-      `Failed to refresh access token: ${JSON.stringify(error)}`,
+      `Failed to refresh access token: ${errorMessage}. Full response: ${JSON.stringify(errorData)}`,
+      response.status,
+      errorData?.error?.code || errorData?.error_code
+    );
+  }
+
+  let data: any;
+  try {
+    data = JSON.parse(responseText);
+  } catch (e) {
+    console.error('Failed to parse refresh token response JSON:', {
+      response_text: responseText.substring(0, 500),
+      error: e,
+    });
+    throw new TikTokAPIError(
+      `Invalid JSON response from token refresh endpoint: ${responseText.substring(0, 200)}`,
       response.status
     );
   }
 
-  const data = await response.json();
+  // Handle TikTok API response structure
+  // Response can be: { data: { access_token, ... } } or { access_token, ... }
+  const tokenData = data.data || data;
+  
+  if (!tokenData || !tokenData.access_token) {
+    console.error('Unexpected refresh token response structure:', {
+      full_response: data,
+      has_data: !!data.data,
+      has_access_token: !!tokenData?.access_token,
+    });
+    throw new TikTokAPIError(
+      `Unexpected refresh token response structure: ${JSON.stringify(data)}`,
+      response.status
+    );
+  }
+  
+  console.log('Token refresh successful:', {
+    has_access_token: !!tokenData.access_token,
+    has_refresh_token: !!tokenData.refresh_token,
+    expires_in: tokenData.expires_in,
+    open_id: tokenData.open_id,
+  });
   
   return {
-    access_token: data.data.access_token,
-    refresh_token: data.data.refresh_token,
-    expires_in: data.data.expires_in,
-    open_id: data.data.open_id,
+    access_token: tokenData.access_token,
+    refresh_token: tokenData.refresh_token,
+    expires_in: tokenData.expires_in,
+    open_id: tokenData.open_id,
   };
 }
 

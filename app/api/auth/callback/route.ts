@@ -181,6 +181,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Validate token response
+    if (!tokenResponse.access_token) {
+      console.error('Token exchange returned no access token:', tokenResponse);
+      return NextResponse.redirect(
+        new URL('/connect?error=token_exchange_failed', appUrl)
+      );
+    }
+
+    if (!tokenResponse.refresh_token) {
+      console.warn('Token exchange returned no refresh token. Token refresh will not be possible.', {
+        has_access_token: !!tokenResponse.access_token,
+        expires_in: tokenResponse.expires_in,
+        open_id: tokenResponse.open_id,
+      });
+    }
+
     // Encrypt tokens
     const encryptedAccessToken = await encrypt({
       token: tokenResponse.access_token,
@@ -188,6 +204,13 @@ export async function GET(request: NextRequest) {
     const encryptedRefreshToken = tokenResponse.refresh_token
       ? await encrypt({ token: tokenResponse.refresh_token })
       : null;
+
+    console.log('Tokens encrypted and ready to store:', {
+      has_access_token: !!encryptedAccessToken,
+      has_refresh_token: !!encryptedRefreshToken,
+      expires_in: tokenResponse.expires_in,
+      open_id: tokenResponse.open_id,
+    });
 
     // Upsert user in database
     try {
