@@ -305,7 +305,9 @@ export async function POST(request: NextRequest) {
     // Parse form data
     const formData = await request.formData();
     searchParams = new URLSearchParams();
-    for (const [key, value] of formData.entries()) {
+    // Convert iterator to array to avoid TypeScript compilation issues
+    const formDataEntries = Array.from(formData.entries());
+    for (const [key, value] of formDataEntries) {
       searchParams.set(key, value.toString());
     }
     // Also merge query params if any
