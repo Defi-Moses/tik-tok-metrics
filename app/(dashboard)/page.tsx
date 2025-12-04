@@ -128,8 +128,8 @@ function ChangeIndicator({ changePercent }: { changePercent: number }) {
 
 function StatsCard({ stats }: { stats: { currentCount: number; growth: number; growthPercent: number } }) {
   return (
-    <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
-      <div className="p-6 sm:p-8 rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-gray-200/50 dark:border-gray-800/50 shadow-lg">
+    <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-700 flex justify-center">
+      <div className="w-1/5 min-w-[280px] p-6 sm:p-8 rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border border-gray-200/50 dark:border-gray-800/50 shadow-lg">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex-1">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
@@ -370,34 +370,34 @@ export default async function DashboardPage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-500/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-6 py-12 md:py-16">
+      <div className="relative max-w-7xl mx-auto px-6 py-12 md:py-16 flex flex-col items-center">
         {/* Header */}
-        <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div className="flex-1">
-              <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-pink-600 via-red-500 to-orange-500 bg-clip-text text-transparent tracking-tight">
-                TikTok Analytics Dashboard
-              </h1>
-              {latestTimestamp && (
-                <p className="text-lg text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  Last updated: {formatTimestamp(latestTimestamp)}
-                </p>
-              )}
-            </div>
+        <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-700 w-full relative">
+          <div className="absolute top-0 right-0">
             <ThemeToggle />
+          </div>
+          <div className="text-center">
+            <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-pink-600 via-red-500 to-orange-500 bg-clip-text text-transparent tracking-tight">
+              TikTok Analytics Dashboard
+            </h1>
+            {latestTimestamp && (
+              <p className="text-lg text-gray-600 dark:text-gray-400 flex items-center justify-center gap-2">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Last updated: {formatTimestamp(latestTimestamp)}
+              </p>
+            )}
           </div>
         </div>
 
@@ -406,7 +406,7 @@ export default async function DashboardPage() {
 
         {/* Accounts Grid */}
         {accounts.length === 0 ? (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full flex justify-center">
             <div className="p-12 rounded-2xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-md border-2 border-dashed border-gray-300 dark:border-gray-700 text-center hover:border-pink-400 dark:hover:border-pink-700 transition-colors duration-300">
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-pink-100 to-orange-100 dark:from-pink-950/30 dark:to-orange-950/30 mb-6">
                 <svg
@@ -446,16 +446,18 @@ export default async function DashboardPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
-            {accounts.map((account, index) => (
-              <div
-                key={account.id}
-                className="animate-in fade-in slide-in-from-bottom-4 duration-500"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <AccountCard account={account} />
-              </div>
-            ))}
+          <div className="w-full flex justify-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
+              {accounts.map((account, index) => (
+                <div
+                  key={account.id}
+                  className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <AccountCard account={account} />
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

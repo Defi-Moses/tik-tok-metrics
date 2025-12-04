@@ -74,6 +74,15 @@ export async function GET(request: NextRequest) {
     authUrl.searchParams.set('code_challenge', codeChallenge);
     authUrl.searchParams.set('code_challenge_method', 'S256');
 
+    // Log authorization URL for debugging (without sensitive data)
+    console.log('Redirecting to TikTok OAuth:', {
+      redirect_uri: redirectUri,
+      client_key: clientKey.substring(0, 4) + '...',
+      has_state: !!state,
+      has_code_challenge: !!codeChallenge,
+      full_url: authUrl.toString(),
+    });
+
     // Redirect to TikTok authorization page
     return NextResponse.redirect(authUrl.toString());
   } catch (error) {

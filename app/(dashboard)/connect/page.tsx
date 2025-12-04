@@ -73,7 +73,7 @@ function StatusMessage({
       oauth_denied: 'OAuth authorization was denied.',
       invalid_client_key: 'Invalid client key. Please check your TikTok Developer Portal settings. If your app is in Development Mode, make sure your TikTok account is added as a Test User.',
       invalid_redirect_uri: 'Redirect URI mismatch. Please verify the redirect URI in TikTok Developer Portal matches: http://localhost:3000/api/auth/callback',
-      no_code: 'Authorization code not received.',
+      no_code: 'Authorization code not received. This usually means the redirect URI doesn\'t match your TikTok Developer Portal settings, or the authorization was cancelled. Please verify your redirect URI is exactly: http://localhost:3000/api/auth/callback',
       invalid_state: 'Invalid authorization state.',
       token_exchange_failed: 'Failed to exchange authorization code.',
       user_fetch_failed: 'Failed to fetch user information.',
@@ -82,7 +82,7 @@ function StatusMessage({
       disconnect_failed: 'Failed to disconnect account.',
     };
 
-    const showHelpLink = error === 'invalid_client_key' || error === 'invalid_redirect_uri';
+    const showHelpLink = error === 'invalid_client_key' || error === 'invalid_redirect_uri' || error === 'no_code';
     
     return (
       <div className="mb-6 p-4 rounded-xl bg-red-50/80 dark:bg-red-950/40 backdrop-blur-sm border border-red-200 dark:border-red-900/50 text-red-800 dark:text-red-300 animate-fade-in shadow-sm">

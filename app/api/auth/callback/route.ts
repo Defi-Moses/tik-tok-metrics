@@ -17,14 +17,28 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state');
     const error = searchParams.get('error');
 
+    // Log all query parameters for debugging
+    const allParams = Object.fromEntries(searchParams.entries());
+    console.log('OAuth callback received:', {
+      url: request.nextUrl.toString(),
+      params: allParams,
+      hasCode: !!code,
+      hasError: !!error,
+      hasState: !!state,
+    });
+
     // Handle OAuth errors from TikTok
     if (error) {
       const errorDescription = searchParams.get('error_description') || error;
+      const errorCode = searchParams.get('error_code');
+      const logId = searchParams.get('log_id');
+      
       console.error('TikTok OAuth error:', {
         error,
         error_description: errorDescription,
-        error_code: searchParams.get('error_code'),
-        log_id: searchParams.get('log_id'),
+        error_code: errorCode,
+        log_id: logId,
+        all_params: allParams,
       });
       
       // Map specific TikTok errors to user-friendly messages
@@ -42,7 +56,24 @@ export async function GET(request: NextRequest) {
 
     // Verify code is present
     if (!code) {
-      console.error('No authorization code received');
+      // Check if we have any parameters at all - if not, might be redirect URI mismatch
+      const hasAnyParams = searchParams.toString().length > 0;
+      
+      console.error('No authorization code received. Full callback details:', {
+        url: request.nextUrl.toString(),
+        all_params: allParams,
+        search_params_string: request.nextUrl.search,
+        has_any_params: hasAnyParams,
+        expected_redirect_uri: `${appUrl}/api/auth/callback`,
+      });
+      
+      // If no parameters at all, likely redirect URI mismatch
+      if (!hasAnyParams) {
+        return NextResponse.redirect(
+          new URL('/connect?error=invalid_redirect_uri', appUrl)
+        );
+      }
+      
       return NextResponse.redirect(
         new URL('/connect?error=no_code', appUrl)
       );

@@ -26,7 +26,7 @@ export function ToastClient() {
     if (error) {
       const messages: Record<string, string> = {
         oauth_denied: 'OAuth authorization was denied.',
-        no_code: 'Authorization code not received.',
+        no_code: 'Authorization code not received. Check redirect URI settings.',
         invalid_state: 'Invalid authorization state.',
         token_exchange_failed: 'Failed to exchange authorization code.',
         user_fetch_failed: 'Failed to fetch user information.',
